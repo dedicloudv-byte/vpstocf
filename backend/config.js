@@ -8,8 +8,8 @@ const fs = require('fs');
 
 // Try to read worker.js to extract configuration
 let workerConfig = {
-  rootDomain: "foolvpn.me",
-  serviceName: "nautica",
+  rootDomain: "ahem7553.worker.dev",
+  serviceName: "user",
   protocols: ["trojan", "vless", "ss"],
   ports: [443, 80]
 };
