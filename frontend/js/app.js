@@ -1,7 +1,7 @@
 // DASBOR PROXY - Frontend Application Logic
 
-// API Base URL - Change this to match your server configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+// API Base URL - This will be proxied by Nginx
+const API_BASE_URL = '/api';
 
 // Global state
 let currentAccounts = [];
