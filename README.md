@@ -1,194 +1,98 @@
-# DASBOR PROXY
+# Welcome to Nautica
 
-A web-based dashboard for managing VLESS Trojan accounts on Ubuntu 20.04, designed to work with Cloudflare Workers.
+Sebuah repository serverless tunnel studi kasus Indonesia
 
-![DASBOR PROXY](https://i.imgur.com/placeholder.jpg)
+> ## NOTES.md
+>
+> Kamu tidak perlu membayar untuk menggunakan kode dalam repository/layanan ini.  
+> Kalau kamu membayar kepada siapapun, berarti kamu terkena scam.
 
-## Features
+# Fitur
 
-- Create and manage VLESS Trojan accounts
-- Support for multiple protocols: Trojan, VLESS, and Shadowsocks
-- QR code generation for easy mobile configuration
-- Proxy server selection
-- Server status monitoring
-- Clean, responsive user interface
+- [x] Otomatis split protocol VLESS, Trojan, dan Shadowsocks
+- [x] Reverse proxy
+- [x] Cache daftar proxy
+- [x] Support TCP dan DoH
+- [x] Transport Websocket CDN dan SNI
+- [x] KV proxy key (proxy berdasarkan country)
+- [x] Pagination
+- [x] Tampilan web bagus dan minimalis (Menurut saya)
+- [x] Dark mode
+- [x] Auto check (ping) akun
+- [x] Ambil akun dalam beberapa format (link, clash, sing-box, dll)
+- [x] Registrasi wildcard
+- [x] Menambahkan filter
+  - [x] Negara `&cc=ID,SG,...`
+- [x] Subscription API
+  - [x] Country Code `&cc=ID,SG,JP,KR,...`
+  - [x] Format `&format=clash` (raw, clash, sfa, bfr, v2ray)
+  - [x] Limit `&limit=10`
+  - [x] VPN `&vpn=vless,trojan,ss`
+  - [x] Port `&port=443,80`
+  - [x] Domain `&domain=zoom.us`
+- [x] Tombol `Deploy to workers` untuk instant deployment
 
-## System Requirements
+# Todo (Belum Selesai)
 
-- Ubuntu 20.04 LTS
-- Node.js 20.x
-- Nginx
-- Internet connection for proxy fetching
+- [x] Lebih efisien (Partial) (I hate Javascript btw, jadi males buat benerin)
+- [ ] Skema URL shadowsocks
 
-## Installation
+Kode ini masih perlu banyak perbaikan, jadi silahkan berkontribusi dan berikan PR kalian!
 
-### Automatic Installation
+# Catatan
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/dasbor-proxy.git
-   cd dasbor-proxy
-   ```
+- Harus UUID v4 Variant 2
+- Gunakan security `none`
+- Gunakan DoH di aplikasi VPN kalian jika tidak bisa browsing atau membuka website
+  - Contoh DoH `https://8.8.8.8/dns-query`
 
-2. Make the setup script executable:
-   ```bash
-   chmod +x setup.sh
-   ```
+# Cara Deploy
 
-3. Run the setup script as root:
-   ```bash
-   sudo ./setup.sh
-   ```
+## Instant
 
-4. Access the dashboard at `http://YOUR_SERVER_IP`
+Klik tombol di bawah  
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/FoolVPN-ID/Nautica)
 
-### Manual Installation
+## Manual
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/dasbor-proxy.git
-   cd dasbor-proxy
-   ```
+1. Buat akun cloudflare
+2. Buat worker
+3. Copy kode dari `_worker.js` ke editor cloudflare worker
+4. (Optional) Masukkan link daftar proxy kalian ke dalam environemnt variable `PROXY_BANK_URL`
+5. (Optional) Masukkan link target reverse proxy ke environment variable `REVERSE_PROXY_TARGET`
+6. Deploy
+7. Buka `https://DOMAIN_WORKER_KALIAN/sub`
 
-2. Install dependencies:
-   ```bash
-   # Update system
-   sudo apt update && sudo apt upgrade -y
-   
-   # Install Node.js 20.x
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-   sudo apt install -y nodejs
-   
-   # Install Nginx
-   sudo apt install -y nginx
-   ```
+- Contoh daftar proxy [proxyList.txt](https://raw.githubusercontent.com/dickymuliafiqri/Nautica/refs/heads/main/proxyList.txt)
+- Contoh reverse proxy [example.com](https://example.com)
 
-3. Install backend dependencies:
-   ```bash
-   cd backend
-   npm install
-   ```
+## Cara Aktivasi API
 
-4. Configure Nginx:
-   ```bash
-   sudo nano /etc/nginx/sites-available/dasbor-proxy
-   ```
-   
-   Add the following configuration:
-   ```nginx
-   server {
-       listen 80;
-       server_name _;
+Salah satu fungsi API adalah agar kalian bisa melihat dan menambahkan subdomain wildcards ke workers.
 
-       location / {
-           root /path/to/dasbor-proxy/frontend;
-           index index.html;
-           try_files $uri $uri/ /index.html;
-       }
+Berikut cara aktivasinya:
 
-       location /api {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
+1. Masuk ke halaman editor workers yang sudah kalian buat
+2. Isi `variable` dari baris ke 4-9 sesuai dengan key yang kalian miliki
+3. Deploy
 
-5. Enable the site and restart Nginx:
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/dasbor-proxy /etc/nginx/sites-enabled/
-   sudo rm -f /etc/nginx/sites-enabled/default
-   sudo systemctl restart nginx
-   ```
+### Aktivasi Wildcard (Custom Domain)
 
-6. Create a systemd service:
-   ```bash
-   sudo nano /etc/systemd/system/dasbor-proxy.service
-   ```
-   
-   Add the following content:
-   ```
-   [Unit]
-   Description=DASBOR PROXY - VLESS Trojan Management
-   After=network.target
+1. Selesaikan langkah [Aktivasi API](#cara-aktivasi-api)
+2. Isi variable `rootDomain` dengan domain utama kalian
+   - Contoh: Domain workers `nautica.foolvpn.me`, berarti domain utamanya adalah `foolvpn.me`
+3. Isi variable `serviceName` dengan nama workers kalian
+   - Contoh: Domain workers `nautica.foolvpn.me`, berarti nama workersnya adalah `nautica`
+4. Buat custom domain di pengaturan workers dengan kombinasi `serviceName`.`rootDomain`
+   - Contoh: `nautica.foolvpn.me`
 
-   [Service]
-   Type=simple
-   User=www-data
-   WorkingDirectory=/path/to/dasbor-proxy/backend
-   ExecStart=/usr/bin/node server.js
-   Restart=on-failure
-   Environment=NODE_ENV=production
-   Environment=PORT=3000
+# Endpoint
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+- `/` -> Halaman utama reverse proxy
+- `/sub/:page` -> Halaman sub/list akun
+- `/api/v1/sub` -> Subscription link, [Queries](#fitur)
 
-7. Start and enable the service:
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable dasbor-proxy
-   sudo systemctl start dasbor-proxy
-   ```
+# Footnote
 
-8. Access the dashboard at `http://YOUR_SERVER_IP`
-
-## Securing with HTTPS
-
-It's recommended to secure your dashboard with HTTPS. You can use Certbot to obtain and install a free SSL certificate:
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-```
-
-## Configuration
-
-The application reads configuration from the `_worker.js` file to extract settings like domain and service name. Make sure this file is present in the root directory of the application.
-
-## API Endpoints
-
-The backend provides the following API endpoints:
-
-- `GET /api/accounts` - Get all accounts
-- `POST /api/accounts` - Create a new account
-- `DELETE /api/accounts/:id` - Delete an account
-- `GET /api/proxies` - Get available proxies
-- `GET /api/status` - Get server status
-
-## Integration with Cloudflare Workers
-
-This dashboard is designed to work with the VLESS Trojan configuration in Cloudflare Workers. The `_worker.js` file contains the worker code that handles the actual proxying of traffic.
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Check the backend logs:
-   ```bash
-   sudo journalctl -u dasbor-proxy
-   ```
-
-2. Check Nginx logs:
-   ```bash
-   sudo tail -f /var/log/nginx/error.log
-   ```
-
-3. Ensure the correct permissions:
-   ```bash
-   sudo chown -R www-data:www-data /path/to/dasbor-proxy
-   sudo chmod -R 755 /path/to/dasbor-proxy
-   ```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- This project integrates with Cloudflare Workers for VLESS Trojan functionality
-- Built with Node.js, Express, and Bootstrap
+- Hal aneh lain yang saya kerjakan [FoolVPN](https://t.me/foolvpn)
+- Tanya-tanya -> [Telegram](https://t.me/d_fordlalatina)
