@@ -1,5 +1,5 @@
 name = "vless"
-main = "src/worker.js"
+main = "sumber/worker.js"
 compatibility_date = "2024-11-29"
 workers_dev = true
 minify = true
