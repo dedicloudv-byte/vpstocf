@@ -1,4 +1,15 @@
-import { connect } from 'cloudflare:sockets'
+// Sockets API is loaded dynamically to avoid 1101 when not available
+let __sockets = { connect: null, error: null }
+async function loadSockets() {
+	if (__sockets.connect || __sockets.error) return __sockets
+	try {
+		const mod = await import('cloudflare:sockets')
+		__sockets.connect = mod.connect
+	} catch (e) {
+		__sockets.error = e
+	}
+	return __sockets
+}
 
 /**
  * Cloudflare Worker: VLESS over WebSocket with TCP relay, DNS(DoH), and simple link generator.
@@ -61,7 +72,7 @@ async function handleVlessOverWS(request, env) {
 	const pair = new WebSocketPair()
 	const [client, server] = Object.values(pair)
 	server.accept()
-	server.binaryType = 'arraybuffer'
+	// binaryType not required in Workers
 
 	let authenticated = false
 	let tcpSocket = null
@@ -126,7 +137,12 @@ async function handleVlessOverWS(request, env) {
 
 				// TCP connect via Cloudflare Sockets API
 				try {
-					tcpSocket = connect({ hostname: address, port })
+					const { connect: cfConnect } = await loadSockets()
+					if (!cfConnect) {
+						server.send(new TextEncoder().encode('Sockets API unavailable'))
+						return closeAll(1011, 'sockets unavailable')
+					}
+					tcpSocket = cfConnect({ hostname: address, port })
 					tcpWriter = tcpSocket.writable.getWriter()
 					tcpReader = tcpSocket.readable.getReader()
 				} catch (e) {
